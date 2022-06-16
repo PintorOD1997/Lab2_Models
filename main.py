@@ -9,40 +9,32 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
-import pandas as pd
 import data as dt
+import numpy as np
+import pandas as pd 
+import functions as ft
+OB = dt.openOB()
 
-# -- TEST 1 : 
-# verify that the script is being read
-print(dt.dict_test)
 
-# -- TEST 2 :
-# verify that installed pandas module works correctly
-df_dict_test = pd.DataFrame(dt.dict_test, index=[0, 1])
-print(df_dict_test)
+# Calcular el midprice
+x,_,_ = ft.OB_metrics(OB)
+midprice = x["Mid Price"]
+# Contabilizar ocurrencias de escenarios (Utilizando todos los datos)
+# e1 = midprice_t == midprice_t+1
+# e2 = midprice_t != midprice_t+1, e2 = total_datos - e1
+e1 = [midprice[i] == midprice[i+1] for i in range(len(midprice)-1)]
+e2 = [midprice[i] != midprice[i+1] for i in range(len(midprice)-1)] # puede ser definido por antonomasia
 
-# -- TEST 3 :
-# verify you can use plotly and visualize plots in jupyter notebook
+metricas = {"e1" : {"cantidad" : sum(e1), "proporcion" : sum(e1)/len(midprice)}, 
+            "e2" : {"cantidad" : sum(e2), "proporcion" : sum(e2)/len(midprice)},
+            "total" : len(midprice)-1 }
 
-import chart_studio.plotly as py   # various tools (jupyter offline print)
-import plotly.graph_objects as go  # plotting engine
 
-# example data
-df = pd.DataFrame({'column_a': [1, 2, 3, 4, 5], 'column_b': [1, 2, 3, 4, 5]})
-# basic plotly plot
-data = [go.Bar(x=df['column_a'], y=df['column_b'])]
-# instruction to view it inside jupyter
-py.iplot(data, filename='jupyter-basic_bar')
-# (alternatively) instruction to view it in web app of plotly
-py.plot(data)
+# Imprimir el resultado como una tabla
 
-# -- TEST 4 :
-# verify you can use plotly and visualize plots in web browser locally
+# Repetir lo anterior para otros (Experimentos con datos de cada minuto)
 
-import plotly.io as pio            # to define input-output of plots
-pio.renderers.default = "browser"  # to render the plot locally in your default web browser
+# Experimentos: 00:06:00 - 00:07:00 ... 00:05:00 - 00:06:00
 
-# basic plotly plot
-plot_data = go.Figure(go.Bar(x=df['column_a'], y=df['column_b']))
-# instruction to view it in specified render (in this case browser)
-plot_data.show()
+
+# Hacer un dataframe con resultados finales

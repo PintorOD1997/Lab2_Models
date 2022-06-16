@@ -1,6 +1,5 @@
 ## Description
-*Insert here a brief description of the project, including, purpose, technologies used and context 
-where it was created.*
+LAB 2 MODELS
 
 ## Install dependencies
 
@@ -12,10 +11,10 @@ Or you can manually install one by one using the name and version in the file.
 
 ## Funcionalities
 
-*Add here examples of core functionalities for the project in this repository.*
 
 ## Author
-*Add Name and a brief description on who you are.*
+Diego Pintor Ochoa
+Financial Engineer
 
 ## License
 **GNU General Public License v3.0** 
@@ -26,4 +25,4 @@ works using a licensed work, under the same license. Copyright and license notic
 must be preserved. Contributors provide an express grant of patent rights.*
 
 ## Contact
-*For more information in reggards of this repo, please contact name@email.com*
+*For more information in regards of this repo, please contact if726622@iteso.mx*
