@@ -171,3 +171,10 @@ def PT_metrics(data_PT: pd.DataFrame = None) -> True:
     OHCLV = data_PT.resample('60T').agg({'price':'ohlc','amount': 'sum'})
     # Buy, Sell and Total traded volume per period
     return n_pt_data, v_pt_data["amount"],diff_pt_data,OHCLV
+
+def totalMidPrice(data_ob: dict = None) -> True:
+    ob_ts = list(data_ob.keys())
+    l_ts = [pd.to_datetime(i_ts) for i_ts in ob_ts]
+    ob_m3 = [(data_ob[ob_ts[i]]["ask"][0]+ data_ob[ob_ts[i]]["bid"][0])*0.5 for i in range(len(ob_ts))]  
+    return ob_m3
+
