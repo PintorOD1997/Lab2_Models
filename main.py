@@ -1,55 +1,49 @@
 
 """
 # -- --------------------------------------------------------------------------------------------------- -- #
-# -- project: Lab 2: Models                                                       -- #
+# -- project: Lab 2: Models                                                                              -- #
 # -- script: main.py : python script with the main functionality                                         -- #
-# -- author: pintorOD1997                                                            -- #
-# -- license: THE LICENSE TYPE AS STATED IN THE REPOSITORY                                               -- #
-# -- repository: https://github.com/PintorOD1997/Lab2_Models                                                         -- #
+# -- author: pintorOD1997                                                                                -- #
+# -- license: GNU General Public License v3.0                                                            -- #
+# -- repository: https://github.com/PintorOD1997/Lab2_Models                                             -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
+# Library import
 import data as dt
 import numpy as np
 import pandas as pd 
 import functions as ft
-OB = dt.openOB()
 
+# OrderBook opening using data openOB function
+data_ob = dt.openOB()
 
-
-#TESTnuevafuncionMidPrices
-from functions import totalMidPrice
-midP = totalMidPrice(OB)
-
-
-data_ob = OB
-# Resampleando
+# Orderbook timestamp
 ob_ts = list(data_ob.keys())
 
+# Timestamp listing
 l_ts = [pd.to_datetime(i_ts) for i_ts in ob_ts]
 
 
-
-
-# Calcular el midprice
-x,_,_ = ft.OB_metrics(OB)
+# MidPrice, using the metrics dataframe from the functions library
+x,_,_ = ft.OB_metrics(data_ob)
 midprice = x["Mid Price"]
-# Contabilizar ocurrencias de escenarios (Utilizando todos los datos)
-# e1 = midprice_t == midprice_t+1
-# e2 = midprice_t != midprice_t+1, e2 = total_datos - e1
+
+# Martingale count, all scenarios
 
 e1 = [midprice[i] == midprice[i+1] for i in range(len(midprice)-1)]
-e2 = [midprice[i] != midprice[i+1] for i in range(len(midprice)-1)] # puede ser definido por antonomasia
+e2 = [midprice[i] != midprice[i+1] for i in range(len(midprice)-1)]
 
-metricas = {"e1" : {"cantidad" : sum(e1), "proporcion" : sum(e1)/len(midprice)}, 
-            "e2" : {"cantidad" : sum(e2), "proporcion" : sum(e2)/len(midprice)},
+APT_dic = {"e1" : {"Amount" : sum(e1), "Ratio" : sum(e1)/len(midprice)}, 
+            "e2" : {"Amount" : sum(e2), "Ratio" : sum(e2)/len(midprice)},
             "total" : len(midprice)-1 }
 
+# Asset Pricing Theory, DataFrame results
+APT_df = pd.DataFrame(APT_dic).T
 
-# Imprimir el resultado como una tabla
-
+### Second Experiment: Martingale evaluation of the Asset Pricing theory using minute segmented data
 midprice = pd.DataFrame(midprice)
-
+# Minute indexed dictionary, index is Hour + Minute, to avoid minute reprisal.
 dic = {}
 for index, row in midprice.iterrows():
     key = str(index.hour) + ":" + str(index.minute)
@@ -58,91 +52,47 @@ for index, row in midprice.iterrows():
         dic[key].append(value)
     except KeyError:
         dic[key] = [value]
-    
-metricasMin = {}
+# Martingale Evaluation of the segmented data
+APT_exp2 = {}
 for i in list(dic): # <- iteración sobre índices del diccionario
     e1 = sum([dic[i][i_t] == dic[i][i_t+1] for i_t in range(len(dic[i])-1)])
     e2 = sum([dic[i][i_t] != dic[i][i_t+1] for i_t in range(len(dic[i])-1)])
-    metricasMin[i] = (
-        {"e1" :{"cantidad" :  e1, "proporcion" : e1/(len(dic[i])-1)}, 
-         "e2" :{"cantidad" :  e2, "proporcion" : e2/(len(dic[i])-1)},
+    APT_exp2[i] = (
+        {"e1" :{"Amount" :  e1, "Ratio" : e1/(len(dic[i])-1)}, 
+         "e2" :{"Amount" :  e2, "Ratio" : e2/(len(dic[i])-1)},
          "total" : len(dic[i])-1
          }
         )
   
-tot = []
-for i in list(metricasMin):
-    tot.append(metricasMin[i]["total"])
-np.array(tot).sum()
+# Experiment 2 results, for each minute, as DataFrame
+APT_minute_df = pd.DataFrame(data = {
+    "e1": [APT_exp2[i]["e1"]["Amount"] for i in list(APT_exp2)],
+    "e2": [APT_exp2[i]["e2"]["Amount"] for i in list(APT_exp2)],
+    "Total": [APT_exp2[i]["total"] for i in list(APT_exp2)],
+    "Ratio e1": [APT_exp2[i]["e1"]["Ratio"] for i in list(APT_exp2)],
+    "Ratio e2": [APT_exp2[i]["e2"]["Ratio"] for i in list(APT_exp2)]
+}, index = list(dic))
 
-# Proporción de frecuencia de martingalas
-mgE1 = []
-for i in list(metricasMin):
-    mgE1.append(metricasMin[i]["e1"]["cantidad"])
-np.array(mgE1).sum()/np.array(tot).sum()
-
-# Promedio de proporción de martingalas
-propE1 = []
-for i in list(metricasMin):
-    propE1.append(metricasMin[i]["e1"]["proporcion"])
-np.array(propE1).mean()
-
-#datos para llenar df fnal:
-df_exp2 = pd.DataFrame(metricasMin).T
-df_e1_exp2=pd.DataFrame(df_exp2["e1"][i] for i in range(0,60))
-df_e1_exp2_conteo = pd.DataFrame(df_e1_exp2["cantidad"])
-df_e2_exp2=pd.DataFrame(df_exp2["e2"][i] for i in range(0,60))
-df_e2_exp2_conteo = pd.DataFrame(df_e2_exp2["cantidad"])
-df_e1_exp2_proporcion = pd.DataFrame(df_e1_exp2["proporcion"])
-df_e2_exp2_proporcion = pd.DataFrame(1-df_e1_exp2["proporcion"])
-df_exp2_total = pd.DataFrame(df_e1_exp2_conteo["cantidad"]+df_e2_exp2_conteo["cantidad"])
+# Experiment 2 results, Ratio mean and total trades
+APT_min_results_df = pd.DataFrame(data = {
+    "e1 Ratio Mean" : np.array(APT_minute_df["Ratio e1"]).mean(),
+    "e2 Ratio Mean" : np.array(APT_minute_df["Ratio e2"]).mean(),
+    "Total Trades" : np.array(APT_minute_df["Total"]).sum()
+},index = range(1))
 
 
-# llenar el df del experimento 2:
-df_exp2_2 = pd.DataFrame()
-df_exp2_2 = df_exp2_2.assign(e1=None)
-df_exp2_2 = df_exp2_2.assign(e2=None)
-df_exp2_2 = df_exp2_2.assign(total=None)
-df_exp2_2 = df_exp2_2.assign(proporcion1=None)
-df_exp2_2 = df_exp2_2.assign(proporcion2=None)
-times = (l_ts)
-valor_e1 = df_e1_exp2_conteo 
-valor_e2 = df_e2_exp2_conteo 
-valor_total = df_exp2_total
-valor_proporcion1 = df_e1_exp2_proporcion 
-valor_proporcion2 = df_e2_exp2_proporcion 
-df_exp2_2['e1'] = valor_e1
-df_exp2_2['e2'] = valor_e2
-df_exp2_2['total'] = valor_e1+valor_e2
-df_exp2_2['proporcion1'] = valor_proporcion1
-df_exp2_2['proporcion2'] = valor_proporcion2
-df_exp2_2.index = midprice.resample('60S').asfreq()[0:-1].index 
-df_exp2_2
 
-
-# Repetir lo anterior para otros (Experimentos con datos de cada minuto)
-
-# Experimentos: 00:06:00 - 00:07:00 ... 00:05:00 - 00:06:00
-
-
-# Hacer un dataframe con resultados finales
-
-
-# Para Weighted Midprice
-x,_,_ = ft.OB_metrics(OB)
+###################################################################################
+# Weighted Midprice Experiments
+x,_,_ = ft.OB_metrics(data_ob)
 Wmidprice = x["Weighted MidPrice (Ask)"]
-# Contabilizar ocurrencias de escenarios (Utilizando todos los datos)
-# e1 = midprice_t == midprice_t+1
-# e2 = midprice_t != midprice_t+1, e2 = total_datos - e1
-
 e1 = [Wmidprice[i] == Wmidprice[i+1] for i in range(len(Wmidprice)-1)]
 e2 = [Wmidprice[i] != Wmidprice[i+1] for i in range(len(Wmidprice)-1)] # puede ser definido por antonomasia
-
-Wmetricas = {"e1" : {"cantidad" : sum(e1), "proporcion" : sum(e1)/len(Wmidprice)}, 
-            "e2" : {"cantidad" : sum(e2), "proporcion" : sum(e2)/len(Wmidprice)},
+Wmetricas = {"e1" : {"Amount" : sum(e1), "Ratio" : sum(e1)/len(Wmidprice)}, 
+            "e2" : {"Amount" : sum(e2), "Ratio" : sum(e2)/len(Wmidprice)},
             "total" : len(Wmidprice)-1 }
+APT_df = pd.DataFrame(Wmetricas).T
 Wmidprice = pd.DataFrame(Wmidprice)
-
 Wdic = {}
 for index, row in Wmidprice.iterrows():
     key = str(index.hour) + ":" + str(index.minute)
@@ -151,66 +101,28 @@ for index, row in Wmidprice.iterrows():
         Wdic[key].append(value)
     except KeyError:
         Wdic[key] = [value]
-    
-WmetricasMin = {}
-for i in list(dic): # <- iteración sobre índices del diccionario
+WAPT_exp2 = {}
+for i in list(dic):
     e1 = sum([dic[i][i_t] == dic[i][i_t+1] for i_t in range(len(dic[i])-1)])
     e2 = sum([dic[i][i_t] != dic[i][i_t+1] for i_t in range(len(dic[i])-1)])
-    WmetricasMin[i] = (
-        {"e1" :{"cantidad" :  e1, "proporcion" : e1/(len(dic[i])-1)}, 
-         "e2" :{"cantidad" :  e2, "proporcion" : e2/(len(dic[i])-1)},
+    WAPT_exp2[i] = (
+        {"e1" :{"Amount" :  e1, "Ratio" : e1/(len(dic[i])-1)}, 
+         "e2" :{"Amount" :  e2, "Ratio" : e2/(len(dic[i])-1)},
          "total" : len(dic[i])-1
          }
         )
-  
-Wtot = []
-for i in list(WmetricasMin):
-    Wtot.append(WmetricasMin[i]["total"])
-np.array(Wtot).sum()
-
-# Proporción de frecuencia de martingalas
-WmgE1 = []
-for i in list(WmetricasMin):
-    WmgE1.append(WmetricasMin[i]["e1"]["cantidad"])
-np.array(WmgE1).sum()/np.array(Wtot).sum()
-
-# Promedio de proporción de martingalas
-WpropE1 = []
-for i in list(WmetricasMin):
-    WpropE1.append(WmetricasMin[i]["e1"]["proporcion"])
-np.array(WpropE1).mean()
-
-#datos para llenar df fnal:
-df_exp2 = pd.DataFrame(WmetricasMin).T
-df_e1_exp2=pd.DataFrame(df_exp2["e1"][i] for i in range(0,60))
-df_e1_exp2_conteo = pd.DataFrame(df_e1_exp2["cantidad"])
-df_e2_exp2=pd.DataFrame(df_exp2["e2"][i] for i in range(0,60))
-df_e2_exp2_conteo = pd.DataFrame(df_e2_exp2["cantidad"])
-df_e1_exp2_proporcion = pd.DataFrame(df_e1_exp2["proporcion"])
-df_e2_exp2_proporcion = pd.DataFrame(1-df_e1_exp2["proporcion"])
-df_exp2_total = pd.DataFrame(df_e1_exp2_conteo["cantidad"]+df_e2_exp2_conteo["cantidad"])
-
-
-# llenar el df del experimento 2:
-df_exp2_2 = pd.DataFrame()
-df_exp2_2 = df_exp2_2.assign(e1=None)
-df_exp2_2 = df_exp2_2.assign(e2=None)
-df_exp2_2 = df_exp2_2.assign(total=None)
-df_exp2_2 = df_exp2_2.assign(proporcion1=None)
-df_exp2_2 = df_exp2_2.assign(proporcion2=None)
-times = (l_ts)
-valor_e1 = df_e1_exp2_conteo 
-valor_e2 = df_e2_exp2_conteo 
-valor_total = df_exp2_total
-valor_proporcion1 = df_e1_exp2_proporcion 
-valor_proporcion2 = df_e2_exp2_proporcion 
-df_exp2_2['e1'] = valor_e1
-df_exp2_2['e2'] = valor_e2
-df_exp2_2['total'] = valor_e1+valor_e2
-df_exp2_2['proporcion1'] = valor_proporcion1
-df_exp2_2['proporcion2'] = valor_proporcion2
-df_exp2_2.index = Wmidprice.resample('60S').asfreq()[0:-1].index 
-df_exp2_2
+WAPT_minute_df = pd.DataFrame(data = {
+    "e1": [WAPT_exp2[i]["e1"]["Amount"] for i in list(WAPT_exp2)],
+    "e2": [WAPT_exp2[i]["e2"]["Amount"] for i in list(WAPT_exp2)],
+    "Total": [WAPT_exp2[i]["total"] for i in list(WAPT_exp2)],
+    "Ratio e1": [WAPT_exp2[i]["e1"]["Ratio"] for i in list(WAPT_exp2)],
+    "Ratio e2": [WAPT_exp2[i]["e2"]["Ratio"] for i in list(WAPT_exp2)]
+}, index = list(dic))
+WAPT_min_results_df = pd.DataFrame(data = {
+    "e1 Ratio Mean" : np.array(WAPT_minute_df["Ratio e1"]).mean(),
+    "e2 Ratio Mean" : np.array(WAPT_minute_df["Ratio e2"]).mean(),
+    "Total Trades" : np.array(WAPT_minute_df["Total"]).sum()
+})
 
 
 

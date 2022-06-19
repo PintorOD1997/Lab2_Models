@@ -1,11 +1,11 @@
 
 """
 # -- --------------------------------------------------------------------------------------------------- -- #
-# -- project: LAB 1 MARKET MICROSTRUCTURE                                                      -- #
-# -- script: main.py : python script with the main functionality                                         -- #
-# -- author: PintorOD1997                                                                      -- #
-# -- license: GNU General Public License v3.0                                               -- #
-# -- repository: https://github.com/PintorOD1997/Lab1-Market-Microstructure-                                                                    -- #
+# -- project: Lab 2: Models                                                                              -- #
+# -- script: functions.py : python functions that are used in main                                       -- #
+# -- author: PintorOD1997                                                                                -- #
+# -- license: GNU General Public License v3.0                                                            -- #
+# -- repository: https://github.com/PintorOD1997/Lab2_Models                                             -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
@@ -87,94 +87,3 @@ def OB_metrics(data_ob: dict = None) -> True:
     })
     metrics.index = l_ts
     return metrics, ob_m1, ob_m4# Returns metrics dataframe, median of trades and no. of priceLevels
-
-
-def OB_OHLCV(metrics: pd.DataFrame = None) -> True:
-    """
-    OrderBook OHLCV : Open, High, Low, Close, Volume (Quoted Volume)
-    Uses certain OrderBook metrics to calculate the OHLCV of the OrderBook.
-    The given price used to calculate Open, High, Low and Close is the Mid Price, 
-    the volume used to calculate the Volume, is the Total Volume, which is the 
-    Quoted Volume of the OrderBook.
-
-    Parameters
-    ----------
-    OB_Metrics (DataFrame) : DataFrame containing the OrderBook metrics
-
-    Returns
-    -------
-    ob_ohlvc : OHLVC of the given OrdeBook
-    """
-    ob_ohlvc = metrics.resample('30s').agg({'Mid Price':'ohlc','Total Volume': 'sum'})
-    return ob_ohlvc
-
-def OBIMB_Moments(metrics: pd.DataFrame = None) -> True:
-    """
-    OrderBook Imbalance Moments
-    This function calculates the first 4 statistic moments of the OrderBook Imbalance
-    The given 4 statistic moments are:
-    - Mean
-    - Variance
-    - Skewness
-    - Kurtosis
-
-    Parameters
-    ----------
-    OB_Metrics (DataFrame) : DataFrame containing the OrderBook metrics
-
-    Returns
-    -------
-    ob_stats : Stats of the Given OrderBook
-    """
-    import scipy.stats as st
-    obimb = metrics["OrderBook Imbalance"]
-    m1 = np.mean(obimb)
-    m2 = np.var(obimb)
-    m3 = st.skew(obimb)
-    m4 = st.kurtosis(obimb)
-    moments = {"Mean" : m1,
-                            "Variance": m2,
-                            "Skewness": m3,
-                            "Kurtosis": m4}
-    return moments
-
-
-def PT_metrics(data_PT: pd.DataFrame = None) -> True:
-    """
-    Function Description here
-
-    Parameters
-    ----------
-    data_PT (DataFrame) : Parameter Description
-
-    Returns
-    -------
-    True : Return Item Description
-
-
-
-    """
-    #resampling period: 1h
-    #for each period
-    # -- (1) Trade Count -- #
-    #Contar la cantidad de trades que ocurre cada hora
-    n_pt_data = data_PT['side'].resample('60T').count()
-    # -- (2) Sell Volume -- #
-    # -- (3) Buy Volume -- #
-    v_pt_data = data_PT.groupby("side").sum()
-    # -- (4) Difference in Trade Count (Buy-Sell) -- #
-    x = data_PT.groupby("side")["side"].count()
-    buy = x[0]
-    sell = x[1]
-    diff_pt_data = buy-sell
-    # -- (5) OHCLV : Open, High, Low, Close, Volume (Traded Volume) -- #
-    OHCLV = data_PT.resample('60T').agg({'price':'ohlc','amount': 'sum'})
-    # Buy, Sell and Total traded volume per period
-    return n_pt_data, v_pt_data["amount"],diff_pt_data,OHCLV
-
-def totalMidPrice(data_ob: dict = None) -> True:
-    ob_ts = list(data_ob.keys())
-    l_ts = [pd.to_datetime(i_ts) for i_ts in ob_ts]
-    ob_m3 = [(data_ob[ob_ts[i]]["ask"][0]+ data_ob[ob_ts[i]]["bid"][0])*0.5 for i in range(len(ob_ts))]  
-    return ob_m3
-
