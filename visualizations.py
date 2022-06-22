@@ -26,7 +26,7 @@ def Model1_Prices_Comparison(data: pd.DataFrame = None):
 
     Returns
     -------
-    None
+    plotly figure to be rendered
     
     """
 
@@ -36,7 +36,10 @@ def Model1_Prices_Comparison(data: pd.DataFrame = None):
         "Mid Price t_1" : midpricesshift
     })
     fig = px.line(df)
-    fig.show()
+    #fig.show()
+    return fig
+    
+    
 def Model1_graph_results_t1(data: pd.DataFrame = None) -> True:
     """
     Experiment 1 Graphical Results Type 1
@@ -49,10 +52,11 @@ def Model1_graph_results_t1(data: pd.DataFrame = None) -> True:
 
     Returns
     -------
-    None
+    plotly figure to be rendered
     """
     fig = px.bar(data, x="Amount")
-    fig.show()
+    #fig.show()
+    return fig
     
 
 def Model1_graph_results_t2(data: pd.DataFrame = None) -> True:
@@ -66,10 +70,11 @@ def Model1_graph_results_t2(data: pd.DataFrame = None) -> True:
 
     Returns
     -------
-    None
+    plotly figure to be rendered
     """
     fig = px.histogram(data,x="Ratio e1")
-    fig.show()
+    #fig.show()
+    return fig
 
 def Model1_graph_results_t3(data: pd.DataFrame = None) -> True:
     """
@@ -82,10 +87,11 @@ def Model1_graph_results_t3(data: pd.DataFrame = None) -> True:
 
     Returns
     -------
-    None
+    plotly figure to be rendered
     """
     fig = px.bar(data.drop(columns=["Total Trades"]))
-    fig.show()
+    #fig.show()
+    return fig
     
 def Model2_graph_results(data: pd.DataFrame = None) -> True:
     """
@@ -99,10 +105,11 @@ def Model2_graph_results(data: pd.DataFrame = None) -> True:
 
     Returns
     -------
-    None
+    plotly figure to be rendered
 
     """
     fig1 = px.line(data,y=data.columns[0:2])
     fig2 = px.histogram(data,x="Spread")
-    fig1.show()
-    fig2.show()
+    return fig1,fig2
+    #fig1.show()
+    #fig2.show()
