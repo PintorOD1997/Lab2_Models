@@ -10,106 +10,98 @@
 """
 
 import pandas as pd 
+import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
+import plotly.io as pio
+pio.renderers.keys()
+from pyparsing import col
 
-
-def Model1_Prices_Comparison(data: pd.DataFrame = None):
+def Model1_Stack_Bar_Graph(results: pd.DataFrame = None,columns: list = None, varnames: list = None, tit : str = None) -> True:
     """
-    Model 1 Graphical Hypothesis Evaluation
-    This function displays a graph on which the prices and the future prices are
-    overlapped, in order for us to test the Model 1 hypothesis, which is:
-    "The best estimator for the future price is the current price"
+    Model 1 Stack Bar Graph
+    This function graphs in a stacked bar graph manner the results of the APT model
 
     Parameters
     ----------
-    data (DataFrame) : 
+    results (pd.DataFrame) : DataFrame containing the results for the model on each minute
+    of the data
+    columns (list) : List containing the columns to be displayed in the graph,
+    in the order to be displayed
+    varnames (list) : Variable names 
+    tit (str) : Graph Title
 
     Returns
     -------
-    plotly figure to be rendered
-    
+    fig : Plotly Graph containing the results
+
     """
-
-    midpricesshift = data.iloc[1:]
-    df = pd.DataFrame({
-        "Mid Price" : data,
-        "Mid Price t_1" : midpricesshift
-    })
-    fig = px.line(df)
-    #fig.show()
-    return fig
-    
-    
-def Model1_graph_results_t1(data: pd.DataFrame = None) -> True:
-    """
-    Experiment 1 Graphical Results Type 1
-    Returns Bar plot for the number of succesful predictions and unsuccesful 
-    for the first experiment of the model
-
-    Parameters
-    ----------
-    data (DataFrame) : Parameter Description
-
-    Returns
-    -------
-    plotly figure to be rendered
-    """
-    fig = px.bar(data, x="Amount")
-    #fig.show()
-    return fig
-    
-
-def Model1_graph_results_t2(data: pd.DataFrame = None) -> True:
-    """
-    Experiment 1 Graphical Results Type 2
-    Returns Histogram
-
-    Parameters
-    ----------
-    data (DataFrame) : Parameter Description
-
-    Returns
-    -------
-    plotly figure to be rendered
-    """
-    fig = px.histogram(data,x="Ratio e1")
-    #fig.show()
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x = np.arange(0,61),
+                y = results[columns[0]],
+                name = varnames[0],
+                text = results[columns[0]],
+                offset=0
+            ),
+            go.Bar(
+                x = np.arange(0,61),
+                y = results[columns[1]],
+                name = varnames[1],
+                text = results[columns[1]],
+                offset = 0,
+                base = results[columns[0]]
+            )
+        ]
+    )
+    fig.update_layout(
+        xaxis_title = "Minute",
+        yaxis_title = "Trades",
+        legend_title = "Martingale forecast result",
+        title = tit
+    )
     return fig
 
-def Model1_graph_results_t3(data: pd.DataFrame = None) -> True:
+def Model2_price_timeseries(results: pd.DataFrame = None, cols : list = None, varnames : list = None, tit : str = None) -> True:
     """
-    Experiment 1 Graphical Results
-    Returns Bar plot
-
-    Parameters
-    ----------
-    data (DataFrame) : Parameter Description
-
-    Returns
-    -------
-    plotly figure to be rendered
-    """
-    fig = px.bar(data.drop(columns=["Total Trades"]))
-    #fig.show()
-    return fig
+    Model 2 Price Timeseries Scatterplot
+    This function graphs using multiple scatterplots the results of the Roll model
     
-def Model2_graph_results(data: pd.DataFrame = None) -> True:
-    """
-    Function Description here
-    Plots Line plot comparing actual spread vs calculated spread and histogram showing
-    the distribution of the spread.
-
     Parameters
     ----------
-    data (DataFrame) : Parameter Description
-
+    results (pd.DataFrame) : Dataframe containing the price data to be graphed.
+    cols (list) : list of columns to be graphed
+    varnames (list) : List of variable names to be used on the graph
+    tit (str) : Graph title
     Returns
     -------
-    plotly figure to be rendered
+    fig : Plotly figure containing the timeseries scatterplot of the provided data
 
     """
-    fig1 = px.line(data,y=data.columns[0:2])
-    fig2 = px.histogram(data,x="Spread")
-    return fig1,fig2
-    #fig1.show()
-    #fig2.show()
+    fig = go.Figure(
+        data = [
+            go.Scatter(
+                x = results.index,
+                y = results[cols[0]],
+                name = varnames[0]                
+            ),
+            go.Scatter(
+                x = results.index,
+                y = results[cols[1]],
+                name = varnames[1]
+            ),
+            go.Scatter(
+                x = results.index,
+                y = results[cols[2]],
+                name = varnames[2]
+            )
+        ]
+    )
+    fig.update_layout(
+        xaxis_title = "Timestamp",
+        yaxis_title = "Price",
+        legend_title = "Price category",
+        title = tit
+    )
+    return fig
